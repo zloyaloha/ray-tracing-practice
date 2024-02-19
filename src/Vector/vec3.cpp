@@ -19,14 +19,14 @@ double& vec3::operator[](size_t i) {
 vec3& vec3::operator+=(const vec3 &other) {
     ref[0] += other[0];
     ref[1] += other[1];
-    ref[3] += other[2];
+    ref[2] += other[2];
     return *this;
 }
 
 vec3& vec3::operator*=(const int &alpha) {
     ref[0] *= alpha;
     ref[1] += alpha;
-    ref[3] += alpha;
+    ref[2] += alpha;
     return *this;
 }
 

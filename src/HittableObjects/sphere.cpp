@@ -2,7 +2,7 @@
 
 Sphere::Sphere(const point3 &center, const double &radius) : _center(center), _radius(radius) {}
 
-bool Sphere::hit(const Ray& r,const double &ray_tmin, const double &ray_tmax, HitRecord& rec) const {
+bool Sphere::hit(const Ray& r, const Interval &ray_inter, HitRecord& rec) const {
     vec3 oc = r.origin() - _center;
     auto a = r.direction().len_squared();
     auto half_b = dot(oc, r.direction());
@@ -15,9 +15,9 @@ bool Sphere::hit(const Ray& r,const double &ray_tmin, const double &ray_tmax, Hi
     double sqrtD = std::sqrt(D);
     double root = (-half_b - sqrtD) / a;
 
-    if (root <= ray_tmin || ray_tmax <= root) {
+    if (!ray_inter.contains(root)) {
         root = (-half_b + sqrtD) / a;
-        if (root <= ray_tmin || ray_tmax <= root) {
+        if (!ray_inter.contains(root)) {
             return false;
         }
     }

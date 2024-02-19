@@ -13,5 +13,5 @@ class HittableList : public HittableObject {
         void push_back(std::shared_ptr<HittableObject> obj);
         void clear();
 
-        bool hit(const Ray& r,const double &ray_tmin, const double &ray_tmax, HitRecord& rec) const override;
+        bool hit(const Ray& r, const Interval &ray_inter, HitRecord& rec) const override;
 };

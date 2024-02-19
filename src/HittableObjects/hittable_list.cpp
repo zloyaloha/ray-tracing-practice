@@ -8,12 +8,12 @@ void HittableList::clear() {
     _objs.clear();
 }
 
-bool HittableList::hit(const Ray& r,const double &ray_tmin, const double &ray_tmax, HitRecord& rec) const {
+bool HittableList::hit(const Ray& r, const Interval &ray_inter, HitRecord& rec) const {
     HitRecord tmpRec;
     bool hitAny = false;
-    auto closest_so_far = ray_tmax;
+    auto closest_so_far = ray_inter.getRight();
     for (const auto &obj: _objs) {
-        if (obj->hit(r, ray_tmin, ray_tmax, tmpRec)) {
+        if (obj->hit(r, Interval(ray_inter.getLeft(), closest_so_far), tmpRec)) {
             hitAny = true;
             closest_so_far = tmpRec.param;
             rec = tmpRec;

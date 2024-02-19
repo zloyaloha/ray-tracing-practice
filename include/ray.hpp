@@ -2,8 +2,6 @@
 #include <iostream>
 #include "vec3.hpp"
 
-using point3 = vec3;
-
 class Ray {
     public:
         Ray() = default;
