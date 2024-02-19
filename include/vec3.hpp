@@ -3,7 +3,7 @@
 #include <cmath>
 #include <iostream>
 #include <array>
-
+#include <constants.hpp>
 
 class vec3 {
     private:
@@ -38,6 +38,12 @@ class vec3 {
         friend double dot(const vec3 &v1, const vec3 &v2); 
         friend vec3 cross(const vec3 &v1, const vec3 &v2);
         vec3 unit_vector() const;
+
+        static vec3 randomInUnitSphere();
+        static vec3 randomUnitVectorInSphere();
+        static vec3 randomUnitVectorInHemisphere(const vec3 &normal);
+        static vec3 random();
+        static vec3 random(const double &min, const double &max);
 };
 
 using point3 = vec3;

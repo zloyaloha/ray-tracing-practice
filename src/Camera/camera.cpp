@@ -7,7 +7,7 @@ Camera::Camera(double ratio, int width) : aspectRatio(ratio), imageWidth(width) 
     
     double focal_lenght = 1.0;
     auto viewportHeight = 2.0, viewportWidth = viewportHeight * (static_cast<double> (imageWidth) / imageHeight);
-    coords = point3(1,1,1);
+    coords = point3(0,0,0);
 
     vec3 viewport_LR = vec3(viewportWidth, 0, 0), viewport_UD = vec3(0, -viewportHeight, 0);
     delta_pixel_LR = viewport_LR / imageWidth, delta_pixel_UD = viewport_UD / imageHeight;
@@ -43,7 +43,7 @@ void Camera::render(const HittableObject &world) {
             color pixelColor(0,0,0);
             for (size_t sample = 0; sample < sampelsPerPixel; ++sample) {
                 Ray r = getRay(i, j);
-                pixelColor += rayColor(r, world);
+                pixelColor += rayColor(r, max_depth, world);
             }
             writeColor(std::cout, pixelColor);
         }
@@ -51,10 +51,14 @@ void Camera::render(const HittableObject &world) {
     std::clog << "\rDone.                 \n";
 }
 
-color Camera::rayColor(const Ray &ray, const HittableObject &world) const {
+color Camera::rayColor(const Ray &ray, int depth, const HittableObject &world) const {
     HitRecord rec;
-    if (world.hit(ray, Interval(0, infinity), rec)) {
-        return 0.5 * (rec.normal + color(0.3, 0.5, 0.3));
+    if (depth <= 0) {
+        return color(0,0,0);
+    }
+    if (world.hit(ray, Interval(0.001, infinity), rec)) {
+        vec3 direction = vec3::randomUnitVectorInHemisphere(rec.normal);
+        return 0.5 * rayColor(Ray(rec.point, direction), depth - 1, world);
     }
     vec3 unit_dir = ray.direction().unit_vector();
     auto a = 0.5*(unit_dir.y() + 1.0);

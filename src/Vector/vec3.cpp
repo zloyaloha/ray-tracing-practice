@@ -82,3 +82,32 @@ vec3 cross(const vec3 &v1, const vec3 &v2) {
 vec3 vec3::unit_vector() const {
     return *this / this->len();
 }
+
+vec3 vec3::random() {
+    return vec3(randomDouble(), randomDouble(), randomDouble());
+}
+
+vec3 vec3::random(const double &min, const double &max) {
+    return vec3(randomDouble(min,max), randomDouble(min,max), randomDouble(min,max));
+}
+
+vec3 vec3::randomInUnitSphere() {
+    while (true) {
+        vec3 tmp = random(-1, 1);
+        if (tmp.len_squared() < 1) {
+            return tmp;
+        }
+    }
+}
+
+vec3 vec3::randomUnitVectorInSphere() {
+    return randomInUnitSphere().unit_vector();
+}
+
+vec3 vec3::randomUnitVectorInHemisphere(const vec3 &normal) {
+    vec3 vectorInSphere = randomInUnitSphere().unit_vector();
+    if (dot(normal, vectorInSphere) > 0.0) {
+        return vectorInSphere;
+    }
+    return -vectorInSphere;
+}
