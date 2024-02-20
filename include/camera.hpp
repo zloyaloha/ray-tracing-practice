@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <hittable_object.hpp>
+#include <ray.hpp>
 
 class Camera {
     private:

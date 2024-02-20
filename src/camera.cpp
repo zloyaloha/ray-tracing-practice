@@ -1,5 +1,4 @@
 #include <camera.hpp>
-#include <interval.hpp>
 
 Camera::Camera(double ratio, int width) : aspectRatio(ratio), imageWidth(width) {
     imageHeight = static_cast<int>(imageWidth / aspectRatio);
@@ -52,9 +51,13 @@ color Camera::rayColor(const Ray &ray, int depth, const HittableObject &world) c
         return color(0,0,0);
     }
     if (world.hit(ray, Interval(0.000001, infinity), rec)) {
-        vec3 direction = rec.normal + vec3::randomUnitVectorInSphere();
-        color tmp = 0.5 * rayColor(Ray(rec.point, direction), depth - 1, world);
-        return tmp;
+        Ray scattered;
+        color attent;
+        if (rec.material->scatter(ray, rec, attent, scattered)) {
+             return attent * rayColor(scattered, depth-1, world);
+        }
+        return color(0,0,0);
+
     }
     vec3 unit_dir = ray.direction().unit_vector();
     auto a = 0.2*(unit_dir.y() + 1.0);

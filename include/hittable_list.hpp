@@ -1,8 +1,7 @@
 #pragma once
-
-#include "hittable_object.hpp"
 #include <vector>
 #include <memory>
+#include <hittable_object.hpp>
 
 class HittableList : public HittableObject {
     private:

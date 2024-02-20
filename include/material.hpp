@@ -1,7 +1,8 @@
 #pragma once
 #include <ray.hpp>
-#include <vec3.hpp>
 #include <hittable_object.hpp>
+
+class HitRecord;
 
 class Material {
     public: 

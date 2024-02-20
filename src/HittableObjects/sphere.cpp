@@ -1,6 +1,7 @@
 #include "sphere.hpp"
 
-Sphere::Sphere(const point3 &center, const double &radius) : _center(center), _radius(radius) {}
+Sphere::Sphere(const point3 &center, const double &raduis, std::shared_ptr<Material> material) : 
+        _center(center), _radius(raduis),  _material(material) {}
 
 bool Sphere::hit(const Ray& r, const Interval &ray_inter, HitRecord& rec) const {
     vec3 oc = r.origin() - _center;
@@ -26,6 +27,7 @@ bool Sphere::hit(const Ray& r, const Interval &ray_inter, HitRecord& rec) const 
     rec.point = r.at(rec.param);
     vec3 outward_normal = (rec.point - _center) / _radius;
     rec.set_orientation(r, outward_normal);
+    rec.material = _material;
 
     return true;
 }

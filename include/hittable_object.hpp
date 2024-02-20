@@ -1,7 +1,8 @@
 #pragma once
-
-#include "ray.hpp"
-#include "interval.hpp"
+#include <vec3.hpp>
+#include <material.hpp>
+#include <interval.hpp>
+#include <ray.hpp>
 
 class Material;
 
