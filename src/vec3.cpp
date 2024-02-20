@@ -93,7 +93,7 @@ vec3 vec3::random(const double &min, const double &max) {
 
 vec3 vec3::randomInUnitSphere() {
     while (true) {
-        vec3 tmp = random(-1, 1);
+        vec3 tmp = vec3::random(-1, 1);
         if (tmp.len_squared() < 1) {
             return tmp;
         }
@@ -106,8 +106,9 @@ vec3 vec3::randomUnitVectorInSphere() {
 
 vec3 vec3::randomUnitVectorInHemisphere(const vec3 &normal) {
     vec3 vectorInSphere = randomInUnitSphere().unit_vector();
-    if (dot(normal, vectorInSphere) > 0.0) {
+    if (dot(vectorInSphere, normal) > 0.0) {
         return vectorInSphere;
+    } else {
+        return -vectorInSphere;
     }
-    return -vectorInSphere;
 }

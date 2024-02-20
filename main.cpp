@@ -6,11 +6,11 @@
 
 int main() {
     HittableList space;
-    Camera cam(16.0 / 9.0, 1920);
-    cam.sampelsPerPixel = 15;
-    cam.max_depth = 15;
-    space.push_back(std::make_shared<Sphere>(point3(0,0,-1), 0.6));
-    space.push_back(std::make_shared<Sphere>(point3(0,-100,-1), 99));
+    Camera cam(16.0 / 9.0, 400);
+    cam.sampelsPerPixel = 30;
+    cam.max_depth = 30;
+    space.push_back(std::make_shared<Sphere>(point3(0,0,-1), 0.5));
+    space.push_back(std::make_shared<Sphere>(point3(0,-100.5,-1), 100.4));
 
     cam.render(space);
 }

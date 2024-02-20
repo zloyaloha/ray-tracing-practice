@@ -3,7 +3,7 @@
 #include <cmath>
 #include <iostream>
 #include <array>
-#include <constants.hpp>
+#include <different.hpp>
 
 class vec3 {
     private:
@@ -47,3 +47,4 @@ class vec3 {
 };
 
 using point3 = vec3;
+using color = vec3;

@@ -16,18 +16,13 @@ Camera::Camera(double ratio, int width) : aspectRatio(ratio), imageWidth(width) 
 }
 
 void Camera::writeColor(std::ostream &out, color pixel_color) {
+
+    pixel_color = pixel_color / sampelsPerPixel;
+
+    double r = linearToGamma(pixel_color.x());
+    double g = linearToGamma(pixel_color.y());
+    double b = linearToGamma(pixel_color.z());
     
-    auto r = pixel_color.x();
-    auto g = pixel_color.y();
-    auto b = pixel_color.z();
-
-    // Divide the color by the number of samples.
-    auto scale = 1.0 / sampelsPerPixel;
-    r *= scale;
-    g *= scale;
-    b *= scale;
-
-    // Write the translated [0,255] value of each color component.
     static const Interval intensity(0.000, 0.999);
     out << static_cast<int>(256 * intensity.clamp(r)) << ' '
         << static_cast<int>(256 * intensity.clamp(g)) << ' '
@@ -56,12 +51,13 @@ color Camera::rayColor(const Ray &ray, int depth, const HittableObject &world) c
     if (depth <= 0) {
         return color(0,0,0);
     }
-    if (world.hit(ray, Interval(0.001, infinity), rec)) {
-        vec3 direction = vec3::randomUnitVectorInHemisphere(rec.normal);
-        return 0.5 * rayColor(Ray(rec.point, direction), depth - 1, world);
+    if (world.hit(ray, Interval(0.000001, infinity), rec)) {
+        vec3 direction = rec.normal + vec3::randomUnitVectorInSphere();
+        color tmp = 0.5 * rayColor(Ray(rec.point, direction), depth - 1, world);
+        return tmp;
     }
     vec3 unit_dir = ray.direction().unit_vector();
-    auto a = 0.5*(unit_dir.y() + 1.0);
+    auto a = 0.2*(unit_dir.y() + 1.0);
     return (1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
 }
 
@@ -75,4 +71,8 @@ Ray Camera::getRay(int i, int j) const {
     point3 someRandomPixel = pixel_loc + pixelSampleSquare();
 
     return Ray(coords, someRandomPixel - coords);
+}
+
+double Camera::linearToGamma(const double &linear) {
+    return std::sqrt(linear);
 }
