@@ -16,11 +16,12 @@ include_directories(${INCLUDE_DIR})
 include_directories(${MATERIALS_DIR})
 include_directories(${HITTABLE_DIR})
 
-add_library(hitObj_lib ${HITTABLE_DIR}/hittable_object.cpp ${HITTABLE_DIR}/sphere.cpp ${HITTABLE_DIR}/hittable_list.cpp)
+add_library(hitObj_lib ${HITTABLE_DIR}/hittable_object.cpp ${HITTABLE_DIR}/sphere.cpp 
+            ${HITTABLE_DIR}/plane.cpp ${HITTABLE_DIR}/hittable_list.cpp)
 add_library(vec3_lib ${SOURCE_DIR}/vec3.cpp)
 add_library(interval_lib ${SOURCE_DIR}/interval.cpp)
 add_library(ray_lib ${SOURCE_DIR}/ray.cpp)
-add_library(materials_lib ${MATERIALS_DIR}/lambertian.cpp)
+add_library(materials_lib ${MATERIALS_DIR}/lambertian.cpp ${MATERIALS_DIR}/metal.cpp ${MATERIALS_DIR}/dielectric.cpp)
 add_library(camera_lib ${SOURCE_DIR}/camera.cpp)
 
 add_executable(main.exe main.cpp)

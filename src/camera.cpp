@@ -60,7 +60,7 @@ color Camera::rayColor(const Ray &ray, int depth, const HittableObject &world) c
 
     }
     vec3 unit_dir = ray.direction().unit_vector();
-    auto a = 0.2*(unit_dir.y() + 1.0);
+    auto a = 0.5*(unit_dir.y() + 1.0);
     return (1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
 }
 
