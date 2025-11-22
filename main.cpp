@@ -11,8 +11,8 @@
 int main() {
     HittableList space;
     Camera cam(16.0 / 9.0, 1080);
-    cam.sampelsPerPixel = 50;
-    cam.max_depth = 50;
+    cam.sampelsPerPixel = 10;
+    cam.max_depth = 10;
 
     auto glass = std::make_shared<Dielectric>(1.5);
     auto lambertian2 = std::make_shared<Lambertian>(color(0.3, 0.4, 0.0));

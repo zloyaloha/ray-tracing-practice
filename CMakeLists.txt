@@ -28,7 +28,7 @@ add_executable(main.exe main.cpp)
 
 target_link_libraries(hitObj_lib PUBLIC vec3_lib ray_lib interval_lib)
 
-target_link_libraries(main.exe PUBLIC vec3_lib
+target_link_libraries(main PUBLIC vec3_lib
                                 interval_lib
                                 ray_lib           
                                 hitObj_lib
