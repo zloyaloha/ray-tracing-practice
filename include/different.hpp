@@ -2,8 +2,6 @@
 
 #include <cmath>
 #include <limits>
-#include <memory>
-#include <random>
 
 
 const double infinity = std::numeric_limits<double>::infinity();

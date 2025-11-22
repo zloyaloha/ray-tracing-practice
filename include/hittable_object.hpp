@@ -3,6 +3,7 @@
 #include <material.hpp>
 #include <interval.hpp>
 #include <ray.hpp>
+#include <memory>
 
 class Material;
 

@@ -1,14 +1,16 @@
 #include "sphere.hpp"
 
-Sphere::Sphere(const point3 &center, const double &raduis, std::shared_ptr<Material> material) : 
-        _center(center), _radius(raduis),  _material(material) {}
+Sphere::Sphere(const point3 &center, const double &raduis,
+               std::shared_ptr<Material> material)
+    : _center(center), _radius(raduis), _material(material) {}
 
-bool Sphere::hit(const Ray& r, const Interval &ray_inter, HitRecord& rec) const {
+bool Sphere::hit(const Ray &r, const Interval &ray_inter,
+                 HitRecord &rec) const {
     vec3 oc = r.origin() - _center;
     auto a = r.direction().len_squared();
     auto half_b = dot(oc, r.direction());
     auto c = oc.len_squared() - _radius * _radius;
-    auto D = half_b * half_b - a*c;
+    auto D = half_b * half_b - a * c;
 
     if (D < 0) {
         return false;
