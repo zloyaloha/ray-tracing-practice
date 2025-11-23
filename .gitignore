@@ -15,3 +15,7 @@ _deps
 *.txt
 
 build/
+diff
+.clang-format
+render.ppm
+images/

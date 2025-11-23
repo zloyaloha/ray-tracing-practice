@@ -9,4 +9,5 @@ public:
     virtual ~Material() = default;
     virtual bool scatter(const Ray& inRay, const HitRecord& rec,
                          color& attenuation, Ray& scattered) const = 0;
+    virtual color emitted() const { return color(0, 0, 0); }
 };

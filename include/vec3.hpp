@@ -26,6 +26,7 @@ public:
 
     double len_squared() const;
     double len() const;
+    bool near_zero() const;
 
     friend std::ostream &operator<<(std::ostream &os, const vec3 &v);
     friend vec3 operator+(const vec3 &v1, const vec3 &v2);
@@ -53,21 +54,9 @@ public:
 using point3 = vec3;
 using color = vec3;
 
-inline double vec3::operator[](size_t i) const {
-    if (i < 3) {
-        return ref[i];
-    } else {
-        throw std::range_error("index is bigger, then size");
-    }
-}
+inline double vec3::operator[](size_t i) const { return ref[i]; }
 
-inline double &vec3::operator[](size_t i) {
-    if (i < 3) {
-        return ref[i];
-    } else {
-        throw std::range_error("index is bigger, then size");
-    }
-}
+inline double &vec3::operator[](size_t i) { return ref[i]; }
 
 inline vec3 &vec3::operator+=(const vec3 &other) {
     ref[0] += other[0];
@@ -78,9 +67,14 @@ inline vec3 &vec3::operator+=(const vec3 &other) {
 
 inline vec3 &vec3::operator*=(const int &alpha) {
     ref[0] *= alpha;
-    ref[1] += alpha;
-    ref[2] += alpha;
+    ref[1] *= alpha;
+    ref[2] *= alpha;
     return *this;
+}
+
+inline bool vec3::near_zero() const {
+    const auto s = 1e-4;
+    return (fabs(ref[0]) < s) && (fabs(ref[1]) < s) && (fabs(ref[2]) < s);
 }
 
 inline vec3 &vec3::operator/=(const int &alpha) { return *this *= 1 / alpha; }

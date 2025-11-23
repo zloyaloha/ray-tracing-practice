@@ -2,8 +2,9 @@
 
 #include <fstream>
 #include <hittable_object.hpp>
-#include <iostream>
 #include <ray.hpp>
+
+#include "vec3.hpp"
 
 class ISaver {
 protected:
@@ -29,6 +30,19 @@ private:
     std::ofstream fout;
 };
 
+class PNGSaver : public ISaver {
+public:
+    PNGSaver(int sampelsPerPixel, const std::string &filepath);
+    void writeColor(color pixel_color) override;
+    void setFormat(int imageWidth, int imageHeight) override;
+    ~PNGSaver();
+
+private:
+    std::vector<unsigned char> pixel_data;  // RGB буфер
+    std::string filepath;
+    int pixel_count = 0;
+};
+
 class OutStreamSaver : public ISaver {
 public:
     OutStreamSaver(int sampelsPerPixel);
@@ -38,7 +52,10 @@ public:
 
 class Camera {
 private:
-    point3 coords;
+    point3 coords;   // Позиция камеры
+    point3 look_at;  // Точка, на которую смотрит
+
+    vec3 forward, right, up;  // Система координат камеры
     vec3 delta_pixel_LR, delta_pixel_UD;
     point3 zeroPixelLoc;
     int imageHeight;
@@ -47,10 +64,14 @@ private:
 public:
     int imageWidth = 100;
     double aspectRatio = 1.0;
-    int sampelsPerPixel = 30;
-    int max_depth = 30;
+    int sampelsPerPixel;
+    int max_depth;
+    color background_color;
+    double vfov = 90.0;
 
-    Camera(double aspect_ratio, int imageWidth, std::unique_ptr<ISaver> &saver);
+    Camera(double ratio, int width, std::unique_ptr<ISaver> &image_saver,
+           const point3 &camera_pos,
+           const point3 &look_at_point = point3(0, 0, 0));
     void render(const HittableObject &world);
     color rayColor(const Ray &ray, int depth,
                    const HittableObject &world) const;

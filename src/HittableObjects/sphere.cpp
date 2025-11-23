@@ -1,8 +1,14 @@
 #include "sphere.hpp"
 
+#include "aabb.hpp"
+#include "vec3.hpp"
+
 Sphere::Sphere(const point3 &center, const double &raduis,
                std::shared_ptr<Material> material)
-    : _center(center), _radius(raduis), _material(material) {}
+    : _center(center), _radius(raduis), _material(material) {
+    auto rvec = vec3(_radius, _radius, _radius);
+    bbox = AABB(_center - rvec, _center + rvec);
+}
 
 bool Sphere::hit(const Ray &r, const Interval &ray_inter,
                  HitRecord &rec) const {
@@ -33,3 +39,5 @@ bool Sphere::hit(const Ray &r, const Interval &ray_inter,
 
     return true;
 }
+
+AABB Sphere::bounding_box() const { return bbox; }
