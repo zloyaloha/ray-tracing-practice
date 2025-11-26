@@ -12,8 +12,10 @@ struct HitRecord {
     float t;
     bool front_face;
     int material_idx;
+    float u;
+    float v;
 
-    __device__ void set_face_normal(const Ray &r, const vec3 &outward_normal) {
+    inline __device__ void set_face_normal(const Ray &r, const vec3 &outward_normal) {
         front_face = dot(r.direction(), outward_normal) < 0;
         normal = front_face ? outward_normal : -outward_normal;
     }

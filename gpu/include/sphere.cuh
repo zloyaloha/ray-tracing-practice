@@ -5,7 +5,7 @@
 #include "ray.cuh"
 #include "vec3.cuh"
 
-struct SphereData {
+struct __align__(16) SphereData {
     point3 center;
     float radius;
     int material_idx;
@@ -13,33 +13,32 @@ struct SphereData {
         : center(center_sphere), radius(radius_sphere), material_idx(material_idx_sphere) {}
 };
 
-inline __device__ bool hit_sphere(const Ray &r, const Interval &ray_t, HitRecord &rec, const SphereData &sphere_data) {
+inline __device__ void get_sphere_uv(const vec3 &p, float &u, float &v) {
+    float theta = acosf(p.y());
+    float phi = atan2f(-p.z(), p.x()) + M_PI;
+
+    u = phi / (2 * M_PI);
+    v = theta / M_PI;
+}
+
+inline __device__ bool hit_sphere(const Ray &r, const Interval &ray_inter, HitRecord &rec, const SphereData &sphere_data) {
     vec3 oc = r.origin() - sphere_data.center;
-    float a = r.direction().len_squared();
-    float half_b = dot(oc, r.direction());
-    float c = oc.len_squared() - sphere_data.radius * sphere_data.radius;
-    float discriminant = half_b * half_b - a * c;
+    auto a = r.direction().len_squared();
+    auto half_b = dot(oc, r.direction());
+    auto c = oc.len_squared() - sphere_data.radius * sphere_data.radius;
+    auto D = half_b * half_b - a * c;
 
-    if (discriminant < 0) return false;
-    if (a < 1e-8) return false;  // Защита от деления на ноль
-    float sqrtd = sqrt(discriminant);
-
-    float root1 = (-half_b - sqrtd) / a;
-    float root2 = (-half_b + sqrtd) / a;
-
-    float root = -1.0;
-    if (root1 >= ray_t.min && root1 <= ray_t.max) {
-        root = root1;
-    }
-    if (root2 >= ray_t.min && root2 <= ray_t.max) {
-        // Если root1 тоже валиден, выбираем ближайший
-        if (root < 0 || root2 < root) {
-            root = root2;
-        }
-    }
-
-    if (root < 0) {
+    if (D < 0) {
         return false;
+    }
+    double sqrtD = sqrtf(D);
+    double root = (-half_b - sqrtD) / a;
+
+    if (!ray_inter.contains(root)) {
+        root = (-half_b + sqrtD) / a;
+        if (!ray_inter.contains(root)) {
+            return false;
+        }
     }
 
     rec.t = root;
@@ -47,5 +46,7 @@ inline __device__ bool hit_sphere(const Ray &r, const Interval &ray_t, HitRecord
     vec3 outward_normal = (rec.point - sphere_data.center) / sphere_data.radius;
     rec.set_face_normal(r, outward_normal);
     rec.material_idx = sphere_data.material_idx;
+    get_sphere_uv(outward_normal, rec.u, rec.v);
+
     return true;
 }

@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "interval.cuh"
+#include "materials.cuh"
 #include "random_utils.cuh"
 #include "ray.cuh"
 #include "scene.cuh"
@@ -81,9 +82,6 @@ struct CameraData {
     int samples_per_pixel;
     int max_depth;
 
-    // __host__ __device__ CameraData() {};
-    // __host__ __device__ ~CameraData() {}
-
     __device__ vec3 pixel_sample_square(curandState &state) const {
         float dx = curand_uniform_double(&state) - 0.5;
         float dy = curand_uniform_double(&state) - 0.5;
@@ -130,3 +128,99 @@ private:
 
     void build_camera_data(CameraData &data) const;
 };
+
+inline __device__ color point_light_contrib(const HitRecord &rec, unsigned int seed) {
+    color result(0.0f, 0.0f, 0.0f);
+
+    for (int i = 0; i < d_scene_data_const.num_point_lights; ++i) {
+        PointLightData light = d_scene_data_const.d_point_lights[i];
+
+        vec3 light_dir = unit_vector(light.pos - rec.point);
+        float dist2 = (light.pos - rec.point).len_squared();
+        float NdotL = fmaxf(dot(rec.normal, light_dir), 0.0f);
+
+        Ray shadow_ray(rec.point, light_dir);
+        HitRecord tmp;
+        if (!hit_scene(shadow_ray, Interval(0.001f, sqrtf(dist2)), tmp)) {
+            result += light.emit * NdotL / (4.0f * M_PI * dist2);
+        }
+    }
+
+    for (int i = 0; i < d_scene_data_const.num_spheres; ++i) {
+        SphereData sphere = d_scene_data_const.d_spheres[i];
+        MaterialData sphere_mat = d_scene_data_const.d_materials[sphere.material_idx];
+        if (sphere_mat.type == DIFFUSE_LIGHT) {
+            float u = random_float(seed);  // [0, 1]
+            float v = random_float(seed);  // [0, 1]
+
+            float theta = acosf(1 - 2 * u);  // [0, pi]
+            float phi = 2.0f * M_PI * v;     // [0, 2*pi]
+
+            float x = sinf(theta) * cosf(phi);
+            float y = sinf(theta) * sinf(phi);
+            float z = cosf(theta);
+
+            vec3 light_point = sphere.center + sphere.radius * vec3(x, y, z);
+            vec3 to_light = light_point - rec.point;
+            float dist_sq = to_light.len_squared();
+            float dist = sqrtf(dist_sq);
+            vec3 light_dir = to_light / dist;
+
+            float NdotL = dot(rec.normal, light_dir);
+
+            if (NdotL > 0.0f) {
+                Ray shadow_ray(rec.point + rec.normal * 0.0001f, light_dir);
+                HitRecord shadow_rec;
+
+                if (!hit_scene(shadow_ray, Interval(0.001f, dist - 0.001f), shadow_rec)) {
+                    float area = 4.0f * M_PI * sphere.radius * sphere.radius;
+
+                    result += sphere_mat.emit * NdotL * area / (dist_sq * 4.0f * M_PI);
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+inline __device__ color ray_color(Ray r, unsigned int &local_seed) {
+    color final_color(0.0f, 0.0f, 0.0f);
+    color cur_attenuation(1.0f, 1.0f, 1.0f);
+    Ray cur_ray = r;
+    vec3 view_dir = unit_vector(-r.direction());  // Направление от точки к камере/глазу
+
+    for (int depth = 0; depth < d_cam_data_const.max_depth; depth++) {
+        HitRecord rec;
+
+        if (hit_scene(cur_ray, Interval(0.001f, 1e30f), rec)) {
+            MaterialData material = d_scene_data_const.d_materials[rec.material_idx];
+
+            // 1. Расчет цвета поверхности (Альбедо/Текстура)
+            color surface_color = material.albedo;
+            if (material.tex_obj != 0) {
+                float4 tex_val = tex2D<float4>(material.tex_obj, rec.u, rec.v);
+                surface_color = color(tex_val.x, tex_val.y, tex_val.z);
+            }
+
+            if (material.type != DIFFUSE_LIGHT) {
+                final_color += cur_attenuation * point_light_contrib(rec, local_seed);
+            }
+
+            Ray scattered;
+            final_color += cur_attenuation * material_emit(material);
+            color attenuation;
+
+            if (material_scatter(cur_ray, rec, attenuation, scattered, local_seed, material)) {
+                cur_attenuation *= attenuation;
+                cur_ray = scattered;
+            } else {
+                return final_color;
+            }
+        } else {
+            final_color += cur_attenuation * d_cam_data_const.background;
+            return final_color;
+        }
+    }
+    return final_color;
+}

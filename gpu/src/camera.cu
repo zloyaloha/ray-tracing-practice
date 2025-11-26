@@ -6,46 +6,13 @@
 
 #include "camera.cuh"
 __constant__ CameraData d_cam_data_const = {};
-__constant__ SceneData d_scene_data_const;
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "material.cuh"
 #include "sphere.cuh"
 #include "stb_image_write.h"
 
 namespace {
 
 constexpr float pi = 3.1415926535897932385;
-
-__device__ color ray_color(Ray r, unsigned int &local_seed) {
-    color final_color(0.0f, 0.0f, 0.0f);
-    color cur_attenuation(1.0f, 1.0f, 1.0f);
-    Ray cur_ray = r;
-
-    for (int depth = 0; depth < d_cam_data_const.max_depth; depth++) {
-        HitRecord rec;
-
-        if (hit_scene(cur_ray, Interval(0.001f, 1e30f), rec)) {
-            Ray scattered;
-            final_color += cur_attenuation * material_emit(d_scene_data_const.d_materials[rec.material_idx]);
-            color attenuation;
-            if (material_scatter(cur_ray, rec, attenuation, scattered, local_seed,
-                                 d_scene_data_const.d_materials[rec.material_idx])) {
-                cur_attenuation = cur_attenuation * attenuation;
-                cur_ray = scattered;
-
-                if (cur_attenuation.x() < 0.001f && cur_attenuation.y() < 0.001f && cur_attenuation.z() < 0.001f) {
-                    break;
-                }
-            } else {
-                return final_color;
-            }
-        } else {
-            final_color += cur_attenuation * d_cam_data_const.background;
-            return final_color;
-        }
-    }
-    return final_color;
-}
 
 __global__ void render_kernel(color *framebuffer) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -153,7 +120,7 @@ Camera::Camera(float ratio, int width, std::unique_ptr<ISaver> image_saver, cons
       aspectRatio(ratio),
       samplesPerPixel(300),
       maxDepth(50),
-      background_color(0.1, 0.1, 0.1),
+      background_color(0.0, 0.0, 0.0),
       origin(camera_pos),
       look_at(look_at_point),
       vup(0, 1, 0),
@@ -184,6 +151,7 @@ void Camera::build_camera_data(CameraData &data) const {
     data.pixel_delta_v = -vertical / imageHeight;
     point3 upper_left = origin - w - horizontal / 2 + vertical / 2;
     data.pixel00_loc = upper_left + 0.5 * (data.pixel_delta_u + data.pixel_delta_v);
+    // data.background = vec3(0.05, 0.05, 0.05);
     data.background = background_color;
     data.image_width = imageWidth;
     data.image_height = imageHeight;
@@ -196,14 +164,10 @@ void Camera::render(SceneData *scene_data, color *d_fb) const {
     build_camera_data(cam_data);
 
     cudaMemcpyToSymbol(d_cam_data_const, &cam_data, sizeof(CameraData), 0, cudaMemcpyHostToDevice);
-    checkCudaErrors(cudaMemcpyToSymbol(d_scene_data_const,  // <-- Имя переменной на GPU
-                                       scene_data,          // <-- Адрес структуры на CPU
-                                       sizeof(SceneData),   // <-- Размер структуры
-                                       0, cudaMemcpyHostToDevice));
 
     std::size_t num_pixels = static_cast<std::size_t>(imageWidth) * imageHeight;
 
-    dim3 threads(24, 24);
+    dim3 threads(16, 16);
     dim3 blocks((imageWidth + threads.x - 1) / threads.x, (imageHeight + threads.y - 1) / threads.y);
 
     render_kernel<<<blocks, threads>>>(d_fb);
