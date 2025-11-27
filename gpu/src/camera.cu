@@ -115,19 +115,16 @@ PNGSaver::~PNGSaver() {
     }
 }
 
-Camera::Camera(float ratio, int width, std::unique_ptr<ISaver> image_saver, const point3 &camera_pos, const point3 &look_at_point)
-    : imageWidth(width),
-      aspectRatio(ratio),
+Camera::Camera(int height, int width, std::unique_ptr<ISaver> image_saver, const point3 &camera_pos, const point3 &look_at_point)
+    : imageWidth(width), imageHeight(height),
+      aspectRatio((float)width / height),
       samplesPerPixel(300),
       maxDepth(50),
       background_color(0.0, 0.0, 0.0),
       origin(camera_pos),
       look_at(look_at_point),
-      vup(0, 1, 0),
-      imageHeight(0),
+      vup(0, 0, 1),
       saver(std::move(image_saver)) {
-    imageHeight = static_cast<int>(imageWidth / aspectRatio);
-    imageHeight = (imageHeight < 1) ? 1 : imageHeight;
     if (saver) {
         saver->setFormat(imageWidth, imageHeight);
     }

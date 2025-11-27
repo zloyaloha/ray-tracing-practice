@@ -3,4 +3,4 @@
 rm images/render*.png
 cd build
 make
-./main
+./gpu/main_gpu < ../config.txt

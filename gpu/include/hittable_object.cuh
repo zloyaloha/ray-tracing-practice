@@ -1,6 +1,5 @@
 #pragma once
 
-#include "interval.cuh"
 #include "ray.cuh"
 #include "vec3.cuh"
 

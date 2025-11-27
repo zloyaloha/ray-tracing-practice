@@ -11,9 +11,7 @@
 #include "plane.hpp"
 #include "vec3.hpp"
 
-std::shared_ptr<HittableList> box_tetrahedron(const point3& center,
-                                              double scale,
-                                              std::shared_ptr<Material> mat) {
+std::shared_ptr<HittableList> box_tetrahedron(const point3& center, double scale, std::shared_ptr<Material> mat) {
     auto sides = std::make_shared<HittableList>();
 
     point3 p0 = center + vec3(1, 1, 1) * scale;
@@ -46,26 +44,21 @@ int main() {
         double r = 15.0;  // Радиус
         double d = r * 2.0;
         space.push_back(box_tetrahedron(point3(0, 1, 3), 0.5, lambertian3));
-        space.push_back(std::make_shared<Ellipse>(point3(-r, 0, -r), vec3(d, 0, 0),
-                                             vec3(0, 0, d), lambertian2));
-        space.push_back(std::make_shared<Quad>(point3(-1, -2, 0), vec3(4, 0, 0),
-                                          vec3(0, 4, 0), metal));
+        space.push_back(std::make_shared<Ellipse>(point3(-r, 0, -r), vec3(d, 0, 0), vec3(0, 0, d), lambertian2));
+        space.push_back(std::make_shared<Quad>(point3(-1, -2, 0), vec3(4, 0, 0), vec3(0, 4, 0), metal));
         space.push_back(std::make_shared<Sphere>(point3(1, 1, 1), 0.5, glass));
         space.push_back(std::make_shared<Sphere>(point3(1, 1, 2), 0.5, metal));
-        space.push_back(
-            std::make_shared<Sphere>(point3(0, 1, 1), 0.5, lambertian1));
-        space.push_back(
-            std::make_shared<Sphere>(point3(10, 10, 10), 5.0, light_mat));
+        space.push_back(std::make_shared<Sphere>(point3(0, 1, 1), 0.5, lambertian1));
+        space.push_back(std::make_shared<Sphere>(point3(10, 10, 10), 5.0, light_mat));
         BVHNode bvh(space);
 
         double t = frame / static_cast<double>(num_frames);
         double distance = -5.0 + 5.0 * t;
         point3 camera_pos(3, 1, 3);
-        std::unique_ptr<ISaver> saver = std::make_unique<PNGSaver>(
-            30, "../images/render" + std::to_string(t) + ".png");
-        Camera cam(16.0 / 9.0, 1080, saver, camera_pos);
-        cam.sampelsPerPixel = 1000;
-        cam.max_depth = 10;
+        std::unique_ptr<ISaver> saver = std::make_unique<PNGSaver>(30, "../images/render" + std::to_string(t) + ".png");
+        Camera cam(16.0 / 9.0, 480, saver, camera_pos);
+        cam.sampelsPerPixel = 10;
+        cam.max_depth = 1000;
 
         cam.render(bvh);
     }

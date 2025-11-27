@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cmath>
-
 constexpr float kInfinity = 1e32;
 
 struct Interval {

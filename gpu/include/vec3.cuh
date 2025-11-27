@@ -87,6 +87,8 @@ __host__ __device__ inline vec3 operator*(const vec3 &v1, const vec3 &v2) {
 
 __host__ __device__ inline vec3 operator*(float t, const vec3 &v) { return vec3(t * v[0], t * v[1], t * v[2]); }
 
+__host__ inline std::ostream &operator <<(std::ostream &out, const vec3 &v) { out << v[0] << " " << v[1] << " " << v[2]; return out; }
+
 __host__ __device__ inline vec3 operator*(const vec3 &v, float t) { return t * v; }
 
 __host__ __device__ inline vec3 operator/(const vec3 &v, float t) { return (1.0 / t) * v; }

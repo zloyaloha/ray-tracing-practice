@@ -17,7 +17,7 @@ struct MaterialData {
     float ir;
     color absorption;
     color albedo;
-    color emit;
+    color emit = color(0, 0, 0);
     cudaTextureObject_t tex_obj = 0;
 };
 
@@ -33,12 +33,12 @@ inline __device__ bool material_scatter(const Ray &r_in, const HitRecord &rec, c
 
     if (mat.tex_obj != 0) {
         float4 tex_val = tex2D<float4>(mat.tex_obj, rec.u, rec.v);
-        base_color = color(tex_val.x, tex_val.y, tex_val.z);
+        base_color = color(tex_val.x, tex_val.y, tex_val.z) * mat.albedo;
     }
 
     switch (mat.type) {
         case LAMBERTIAN: {
-            vec3 scatter_direction = rec.normal + random_unit_vector(seed);
+            vec3 scatter_direction = random_in_hemisphere(rec.normal, seed);
             if (scatter_direction.near_zero()) scatter_direction = rec.normal;
             scattered = Ray(rec.point, scatter_direction);
             attenuation = base_color;
@@ -46,10 +46,19 @@ inline __device__ bool material_scatter(const Ray &r_in, const HitRecord &rec, c
         }
 
         case METAL: {
-            vec3 reflected = unit_vector(r_in.direction()).reflect(rec.normal);
-            scattered = Ray(rec.point, reflected + mat.fuzz * random_in_unit_sphere(seed));
-            attenuation = base_color;
-            return dot(scattered.direction(), rec.normal) > 0;
+            float p_metal = 0.8f;
+            if (random_float(seed) < p_metal) {
+                vec3 reflected = unit_vector(r_in.direction()).reflect(rec.normal);
+                scattered = Ray(rec.point, reflected + mat.fuzz * random_in_unit_sphere(seed));
+                attenuation = base_color;
+                return dot(scattered.direction(), rec.normal) > 0;
+            } else {
+                vec3 scatter_direction = random_in_hemisphere(rec.normal, seed);
+                if (scatter_direction.near_zero()) scatter_direction = rec.normal;
+                scattered = Ray(rec.point, scatter_direction);
+                attenuation = base_color;
+                return true;
+            }
         }
 
         case DIELECTRIC: {
@@ -69,16 +78,23 @@ inline __device__ bool material_scatter(const Ray &r_in, const HitRecord &rec, c
                 direction = unit_direction.refract(rec.normal, refraction_ratio);
             }
 
-            scattered = Ray(rec.point, direction);
+            float distance = (rec.point - r_in.origin()).len();
+            color absorbance = mat.absorption;
+            color transmission =
+                color(exp(-absorbance.x() * distance), exp(-absorbance.y() * distance), exp(-absorbance.z() * distance));
 
             if (!rec.front_face) {
-                float distance = rec.t;
-
-                attenuation = color(expf(-mat.absorption.x() * distance), expf(-mat.absorption.y() * distance),
-                                    expf(-mat.absorption.z() * distance));
-            } else {
-                attenuation = color(1.0f, 1.0f, 1.0f);
+                attenuation = attenuation * transmission;
             }
+
+            float p = fmaxf(attenuation.x(), fmaxf(attenuation.y(), attenuation.z()));
+            if (random_float(seed) > p) return false;
+            attenuation /= p;
+
+            float offset = 1e-4f;
+            vec3 origin = rec.point + rec.normal * offset * (dot(direction, rec.normal) > 0 ? 1.0f : -1.0f);
+
+            scattered = Ray(origin, direction);
 
             return true;
         }
@@ -91,15 +107,15 @@ inline __device__ bool material_scatter(const Ray &r_in, const HitRecord &rec, c
 }
 
 inline __device__ color material_emit(const MaterialData &mat) {
-    switch (mat.type) {
-        case LAMBERTIAN:
-        case METAL:
-        case DIELECTRIC: {
-            return color(0.0, 0.0, 0.0);
-        }
-        case DIFFUSE_LIGHT: {
+    // switch (mat.type) {
+    //     case LAMBERTIAN:
+    //     case METAL:
+    //     case DIELECTRIC: {
+    //         return color(0.0, 0.0, 0.0);
+    //     }
+    //     case DIFFUSE_LIGHT: {
             return mat.emit;
-        }
-    }
-    return color(0.0, 0.0, 0.0);
+        // }
+    // }
+    // return color(0.0, 0.0, 0.0);
 }
