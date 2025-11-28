@@ -12,7 +12,6 @@ _deps
 *.json
 *.a
 *.exe
-*.txt
 
 build/
 diff

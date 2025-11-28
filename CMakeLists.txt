@@ -12,5 +12,5 @@ list(APPEND CMAKE_CUDA_FLAGS "-Xcompiler=-std=c++20 --expt-relaxed-constexpr") #
 set(CMAKE_CUDA_ARCHITECTURES "native")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_subdirectory(cpu)
-add_subdirectory(gpu)
+# add_subdirectory(src/cpu)  # Removed - using unified GPU/CPU implementation
+add_subdirectory(src/gpu)
