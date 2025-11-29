@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "hittable_object.cuh"
+#include "hittable_object.h"
 
 enum PlaneType { QUAD, ELLIPSE, TRIANGLE };
 

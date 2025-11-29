@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+
 #include "vec3.h"
 
 struct CameraPathParams {
@@ -9,7 +10,7 @@ struct CameraPathParams {
     float Arc, Azc;
     float wrc, wzc, wc;
     float prc, pzc;
-    
+
     float rn0, zn0, phin0;
     float Arn, Azn;
     float wrn, wzn, wn;
@@ -48,7 +49,7 @@ struct SceneParams {
     int width;
     int height;
     float fov_degrees;
-    
+
     CameraPathParams camera_path;
     std::vector<BodyParams> bodies;
     FloorParams floor;

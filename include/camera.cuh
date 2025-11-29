@@ -10,10 +10,11 @@
 #include <vector>
 
 #include "interval.h"
-#include "materials.cuh"
-#include "random_utils.cuh"
+#include "materials.h"
+#include "random_utils.h"
 #include "ray.h"
-#include "scene.cuh"
+#include "scene.h"
+#include "scene_params.h"
 #include "vec3.h"
 
 #define checkCudaErrors(val) check_cuda((val), #val, __FILE__, __LINE__)
@@ -64,6 +65,17 @@ private:
     int pixel_count = 0;
 };
 
+class BinarySaver : public ISaver {
+public:
+    BinarySaver(int samplesPerPixel, const std::string &filepath);
+    void writeColor(color pixel_color) override;
+    void setFormat(int imageWidth, int imageHeight) override;
+    ~BinarySaver() = default;
+
+private:
+    std::ofstream fout;
+};
+
 class OutStreamSaver : public ISaver {
 public:
     explicit OutStreamSaver(int samplesPerPixel);
@@ -97,20 +109,19 @@ struct CameraData {
     }
 };
 
-__host__ void render_kernel_cpu(color *framebuffer, const CameraData &d_cam_data_const, const SceneData &d_scene_data_const);
-__device__ color ray_color(Ray r, unsigned int &local_seed, const SceneData& scene_data_ref, const CameraData& cam_data_ref);
-__host__ color ray_color_host(Ray r, unsigned int &local_seed, const SceneData& scene_data_ref, const CameraData& cam_data_ref);
-
-// Functions to set constant memory (defined in camera.cu)
-void set_camera_data_const(const CameraData& data);
-void set_scene_data_const(const SceneData& data);
+__device__ color ray_color(Ray r, unsigned int &local_seed, const SceneData &scene_data_ref, const CameraData &cam_data_ref);
+__host__ color ray_color_host(Ray r, unsigned int &local_seed, const SceneData &scene_data_ref, const CameraData &cam_data_ref);
+__host__ void gpu_render(SceneParams &scene_params, SceneData &host_scene);
+__host__ void cpu_render(SceneParams &scene_params, SceneData &host_scene);
 
 class Camera {
 public:
     Camera(int height, int width, std::unique_ptr<ISaver> image_saver, const point3 &camera_pos,
            const point3 &look_at_point = point3(0, 0, 0));
 
-    void render(SceneData *scene_data, color *d_fb) const;
+    void render(color *d_fb) const;
+    void render_cpu(const SceneData &scene_data, std::vector<color> &framebuffer);
+    CameraData build_camera_data() const;
 
     int imageWidth;
     int imageHeight;
@@ -125,6 +136,4 @@ public:
 
 private:
     vec3 vup;
-
-    void build_camera_data(CameraData &data) const;
 };

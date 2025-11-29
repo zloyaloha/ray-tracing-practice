@@ -18,7 +18,9 @@ __host__ __device__ inline float random_float(unsigned int &seed) {
     return static_cast<float>(seed) / 4294967296.0f;
 }
 
-__host__ __device__ inline float random_float(unsigned int &seed, float min, float max) { return min + (max - min) * random_float(seed); }
+__host__ __device__ inline float random_float(unsigned int &seed, float min, float max) {
+    return min + (max - min) * random_float(seed);
+}
 
 __host__ __device__ inline vec3 random_in_unit_sphere(unsigned int &seed) {
     while (true) {

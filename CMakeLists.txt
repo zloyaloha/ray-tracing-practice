@@ -6,11 +6,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
-list(APPEND CMAKE_CUDA_FLAGS "-Xcompiler=-std=c++20 --expt-relaxed-constexpr") # Явное указание флага компилятору хоста
-
 
 set(CMAKE_CUDA_ARCHITECTURES "native")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# add_subdirectory(src/cpu)  # Removed - using unified GPU/CPU implementation
-add_subdirectory(src/gpu)
+set(SOURCE_DIR  ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+add_executable(main src/main.cu src/camera.cu)
+target_include_directories(main PUBLIC ${INCLUDE_DIR})
+
+target_compile_options(main PRIVATE
+    $<$<COMPILE_LANGUAGE:CUDA>:
+        -O3
+        --ptxas-options=-v
+        -lineinfo
+        --extra-device-vectorization
+    >
+)

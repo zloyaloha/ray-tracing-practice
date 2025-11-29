@@ -10,7 +10,7 @@ public:
     inline __host__ __device__ Interval() : min(+kInfinity), max(-kInfinity) {}
     inline __host__ __device__ Interval(float min_value, float max_value) : min(min_value), max(max_value) {}
 
-    inline __host__ __device__ Interval(const Interval& a, const Interval& b) 
+    inline __host__ __device__ Interval(const Interval& a, const Interval& b)
         : min(fminf(a.min, b.min)), max(fmaxf(a.max, b.max)) {}
 
     inline __host__ __device__ bool contains(float value) const { return min <= value && value <= max; }
@@ -22,7 +22,7 @@ public:
     }
 
     inline __host__ __device__ float size() const { return max - min; }
-    
+
     inline __host__ __device__ Interval expand(float delta) const {
         auto padding = delta / 2;
         return Interval(min - padding, max + padding);

@@ -4,28 +4,27 @@
 
 #include <cmath>
 
-#include "hittable_object.cuh"
-#include "random_utils.cuh"
+#include "hittable_object.h"
+#include "random_utils.h"
 #include "ray.h"
 #include "vec3.h"
 
 enum MaterialType { LAMBERTIAN, METAL, DIELECTRIC, DIFFUSE_LIGHT };
 
 struct CpuTexture {
-    float* data;
+    float *data;
     int width;
     int height;
 };
 
-inline __host__ color tex2D_cpu(CpuTexture* tex, float u, float v) {
-    if (!tex || !tex->data) return color(1, 0, 1); // Debug pink
+inline __host__ color tex2D_cpu(CpuTexture *tex, float u, float v) {
+    if (!tex || !tex->data) return color(1, 1, 1);
 
-    // Wrap coordinates
     u = u - floor(u);
     v = v - floor(v);
 
     float px = u * tex->width;
-    float py = (1.0f - v) * tex->height; // Flip V for standard UV
+    float py = (1.0f - v) * tex->height;
 
     int x0 = static_cast<int>(px);
     int y0 = static_cast<int>(py);
@@ -36,8 +35,8 @@ inline __host__ color tex2D_cpu(CpuTexture* tex, float u, float v) {
     float dy = py - y0;
 
     auto get_pixel = [&](int x, int y) {
-        int idx = (y * tex->width + x) * 4; // 4 channels
-        return color(tex->data[idx], tex->data[idx+1], tex->data[idx+2]);
+        int idx = (y * tex->width + x) * 4;  // 4 channels
+        return color(tex->data[idx], tex->data[idx + 1], tex->data[idx + 2]);
     };
 
     color c00 = get_pixel(x0, y0);
@@ -59,7 +58,7 @@ struct MaterialData {
     color albedo;
     color emit = color(0, 0, 0);
     cudaTextureObject_t tex_obj = 0;
-    CpuTexture* cpu_tex = nullptr;
+    CpuTexture *cpu_tex = nullptr;
 };
 
 inline __host__ __device__ static float reflectance(float cosine, float ref_idx) {
@@ -69,7 +68,7 @@ inline __host__ __device__ static float reflectance(float cosine, float ref_idx)
 }
 
 inline __host__ __device__ bool material_scatter(const Ray &r_in, const HitRecord &rec, color &attenuation, Ray &scattered,
-                                        unsigned int &seed, const MaterialData &mat) {
+                                                 unsigned int &seed, const MaterialData &mat) {
     switch (mat.type) {
         case LAMBERTIAN: {
             vec3 scatter_direction = random_in_hemisphere(rec.normal, seed);
@@ -140,6 +139,4 @@ inline __host__ __device__ bool material_scatter(const Ray &r_in, const HitRecor
     return false;
 }
 
-inline __host__ __device__ color material_emit(const MaterialData &mat) {
-    return mat.emit;
-}
+inline __host__ __device__ color material_emit(const MaterialData &mat) { return mat.emit; }

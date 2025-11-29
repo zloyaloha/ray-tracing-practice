@@ -18,7 +18,7 @@ __host__ __device__ vec3 unit_vector(const vec3 &v);
 struct vec3 {
     float e[3];
 
-    __host__ inline vec3() = default;
+    inline vec3() = default;
     __host__ __device__ inline vec3(float e0, float e1, float e2) : e{e0, e1, e2} {}
 
     __host__ __device__ inline float x() const { return e[0]; }
@@ -87,7 +87,10 @@ __host__ __device__ inline vec3 operator*(const vec3 &v1, const vec3 &v2) {
 
 __host__ __device__ inline vec3 operator*(float t, const vec3 &v) { return vec3(t * v[0], t * v[1], t * v[2]); }
 
-__host__ inline std::ostream &operator <<(std::ostream &out, const vec3 &v) { out << v[0] << " " << v[1] << " " << v[2]; return out; }
+__host__ inline std::ostream &operator<<(std::ostream &out, const vec3 &v) {
+    out << v[0] << " " << v[1] << " " << v[2];
+    return out;
+}
 
 __host__ __device__ inline vec3 operator*(const vec3 &v, float t) { return t * v; }
 

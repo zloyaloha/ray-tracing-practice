@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hittable_object.cuh"
+#include "hittable_object.h"
 #include "interval.h"
 #include "ray.h"
 #include "vec3.h"
@@ -21,7 +21,8 @@ inline __host__ __device__ void get_sphere_uv(const vec3 &p, float &u, float &v)
     v = theta / M_PI;
 }
 
-inline __host__ __device__ bool hit_sphere(const Ray &r, const Interval &ray_inter, HitRecord &rec, const SphereData &sphere_data) {
+inline __host__ __device__ bool hit_sphere(const Ray &r, const Interval &ray_inter, HitRecord &rec,
+                                           const SphereData &sphere_data) {
     vec3 oc = r.origin() - sphere_data.center;
     auto a = r.direction().len_squared();
     auto half_b = dot(oc, r.direction());
