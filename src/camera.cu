@@ -195,17 +195,29 @@ CameraData Camera::build_camera_data() const {
     return data;
 }
 
-void Camera::render(color *d_fb) const {
+void Camera::render(int n, color *d_fb) const {
     std::size_t num_pixels = static_cast<std::size_t>(imageWidth) * imageHeight;
+    std::vector<color> host_fb(num_pixels);
 
     dim3 threads(16, 16);
     dim3 blocks((imageWidth + threads.x - 1) / threads.x, (imageHeight + threads.y - 1) / threads.y);
 
+    cudaEvent_t start, stop;
+    checkCudaErrors(cudaEventCreate(&start));
+    checkCudaErrors(cudaEventCreate(&stop));
+    checkCudaErrors(cudaEventRecord(start));
     render_kernel<<<blocks, threads>>>(d_fb);
+    checkCudaErrors(cudaEventRecord(stop));
+    checkCudaErrors(cudaEventSynchronize(stop));
+    float time;
+    checkCudaErrors(cudaEventElapsedTime(&time, start, stop));
+    checkCudaErrors(cudaEventDestroy(start));
+    checkCudaErrors(cudaEventDestroy(stop));
+    long long total_rays = imageWidth * imageHeight * samplesPerPixel * samplesPerPixel;
+    std::cout << n << '\t' << time << "\t" << total_rays << std::endl;
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
-    std::vector<color> host_fb(num_pixels);
     checkCudaErrors(cudaMemcpy(host_fb.data(), d_fb, num_pixels * sizeof(color), cudaMemcpyDeviceToHost));
 
     for (int j = 0; j < imageHeight; ++j) {
@@ -297,7 +309,7 @@ void gpu_render(SceneParams &scene_params, SceneData &host_scene) {
     for (int n = 0; n < scene_params.num_frames; ++n) {
         char filename[256];
         snprintf(filename, sizeof(filename), scene_params.output_path.c_str(), n);
-        auto saver = std::make_unique<BinarySaver>(scene_params.render.sqrt_rays_per_pixel, filename);
+        auto saver = std::make_unique<PNGSaver>(scene_params.render.sqrt_rays_per_pixel, filename);
         float t_param = (float(n) / scene_params.num_frames) * 2.0f * M_PI;
 
         float r_c = scene_params.camera_path.rc0 +
@@ -330,20 +342,7 @@ void gpu_render(SceneParams &scene_params, SceneData &host_scene) {
         const SceneData *d_scene_data_ptr;
         checkCudaErrors(cudaGetSymbolAddress((void **)&d_scene_data_ptr, d_scene_data_const));
 
-        cudaEvent_t start, stop;
-        checkCudaErrors(cudaEventCreate(&start));
-        checkCudaErrors(cudaEventCreate(&stop));
-        checkCudaErrors(cudaEventRecord(start));
-        camera.render(d_fb);
-        checkCudaErrors(cudaEventRecord(stop));
-        checkCudaErrors(cudaEventSynchronize(stop));
-        float time;
-        checkCudaErrors(cudaEventElapsedTime(&time, start, stop));
-        checkCudaErrors(cudaEventDestroy(start));
-        checkCudaErrors(cudaEventDestroy(stop));
-        long long total_rays = (long long)scene_params.width * scene_params.height * scene_params.render.sqrt_rays_per_pixel *
-                               scene_params.render.sqrt_rays_per_pixel;
-        std::cout << n << "\t" << time << "\t" << total_rays << "\n";
+        camera.render(n, d_fb);
     }
     cudaFree(d_fb);
 }
@@ -354,7 +353,7 @@ void cpu_render(SceneParams &scene_params, SceneData &host_scene) {
     for (int n = 0; n < scene_params.num_frames; ++n) {
         char filename[256];
         snprintf(filename, sizeof(filename), scene_params.output_path.c_str(), n);
-        auto saver = std::make_unique<BinarySaver>(scene_params.render.sqrt_rays_per_pixel, filename);
+        auto saver = std::make_unique<PNGSaver>(scene_params.render.sqrt_rays_per_pixel, filename);
         float t_param = (float(n) / scene_params.num_frames) * 2.0f * M_PI;
 
         float r_c = scene_params.camera_path.rc0 +

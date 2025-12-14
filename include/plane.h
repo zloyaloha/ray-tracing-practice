@@ -7,12 +7,21 @@
 enum PlaneType { QUAD, ELLIPSE, TRIANGLE };
 
 struct __align__(16) PlaneData {
-    PlaneType type;
+    vec3 w;            
     float D;
+
+    vec3 u;
+    float pad1;
+    
+    vec3 v;
     int material_idx;
-    vec3 w, u, v;
+
     point3 base;
-    vec3 normal;
+    PlaneType type;
+
+    vec3 normal;       
+    float pad2;
+
     __host__ PlaneData(const point3 &base, const vec3 &u, const vec3 &v, int material_index, PlaneType type);
 };
 

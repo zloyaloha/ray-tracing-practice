@@ -1,7 +1,7 @@
 #include <cmath>
 #include <cstdio>
 #include <iostream>
-
+#include <iomanip>
 #include "bvh_builder.h"
 #include "camera.cuh"
 #include "materials.h"
@@ -567,6 +567,82 @@ void print_default_config() {
     std::cout << "15.0 15.0 1    10.0 10.0 10.0\n";
     std::cout << "15.0 -15.0 1   10.0 10.0 10.0\n";
     std::cout << "50 50\n";
+}
+
+void export_scene_geometry(const std::vector<PlaneData> &planes, const std::string &filename) {
+    std::ofstream out(filename);
+    if (!out.is_open()) {
+        std::cerr << "Failed to open " << filename << std::endl;
+        return;
+    }
+
+    for (const auto &plane : planes) {
+        vec3 p1 = plane.base;
+        vec3 p2 = plane.base + plane.u;
+        vec3 p3, p4;
+
+        if (plane.type == PlaneType::QUAD) {
+            p3 = plane.base + plane.u + plane.v;
+            p4 = plane.base + plane.v;
+
+            out << p1.x() << " " << p1.y() << " " << p1.z() << "\n";
+            out << p2.x() << " " << p2.y() << " " << p2.z() << "\n";
+            out << p3.x() << " " << p3.y() << " " << p3.z() << "\n";
+            out << p4.x() << " " << p4.y() << " " << p4.z() << "\n";
+            out << p1.x() << " " << p1.y() << " " << p1.z() << "\n";
+
+        } else if (plane.type == PlaneType::TRIANGLE) {
+            p3 = plane.base + plane.v; // Это третья вершина (C)
+
+            out << p1.x() << " " << p1.y() << " " << p1.z() << "\n";
+            out << p2.x() << " " << p2.y() << " " << p2.z() << "\n";
+            out << p3.x() << " " << p3.y() << " " << p3.z() << "\n";
+            out << p1.x() << " " << p1.y() << " " << p1.z() << "\n"; 
+        }
+
+        out << "\n\n"; 
+    }
+    out.close();
+    std::cout << "Geometry exported to " << filename << std::endl;
+}
+
+void export_camera_path(const SceneParams &params, const std::string &filename) {
+    std::ofstream out(filename);
+    
+    
+    for (int t = 0; t < params.num_frames; ++t) {
+        float time = (float)t;
+
+        float current_angle = params.camera_path.wc * time;
+    
+        if (std::abs(current_angle) > 2 * 3.1415926535f) {
+            break; 
+        }
+
+        float r_c = params.camera_path.rc0 + params.camera_path.Arc * sin(params.camera_path.wrc * time + params.camera_path.prc);
+        float z_c = params.camera_path.zc0 + params.camera_path.Azc * sin(params.camera_path.wzc * time + params.camera_path.pzc);
+        float phi_c = params.camera_path.phic0 + params.camera_path.wc * time;
+
+        float cam_x = r_c * cos(phi_c);
+        float cam_y = r_c * sin(phi_c);
+        float cam_z = z_c;
+
+        float r_n = params.camera_path.rn0 + params.camera_path.Arn * sin(params.camera_path.wrn * time + params.camera_path.prn);
+        float z_n = params.camera_path.zn0 + params.camera_path.Azn * sin(params.camera_path.wzn * time + params.camera_path.pzn);
+        float phi_n = params.camera_path.phin0 + params.camera_path.wn * time;
+
+        float look_x = r_n * cos(phi_n);
+        float look_y = r_n * sin(phi_n);
+        float look_z = z_n;
+
+        float dx = look_x - cam_x;
+        float dy = look_y - cam_y;
+        float dz = look_z - cam_z;
+        out << cam_x << " " << cam_y << " " << cam_z << " " 
+            << dx << " " << dy << " " << dz << "\n";
+    }
+    out.close();
+    std::cout << "Camera path exported to " << filename << std::endl;
 }
 
 int main(int argc, char *argv[]) {

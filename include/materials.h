@@ -79,19 +79,19 @@ inline __host__ __device__ bool material_scatter(const Ray &r_in, const HitRecor
         }
 
         case METAL: {
-            float p_metal = 0.8f;
-            if (random_float(seed) < p_metal) {
+            // float p_metal = 0.99f;
+            // if (random_float(seed) < p_metal) {
                 vec3 reflected = unit_vector(r_in.direction()).reflect(rec.normal);
                 scattered = Ray(rec.point, reflected + mat.fuzz * random_in_unit_sphere(seed));
                 attenuation = mat.albedo;
                 return dot(scattered.direction(), rec.normal) > 0;
-            } else {
-                vec3 scatter_direction = random_in_hemisphere(rec.normal, seed);
-                if (scatter_direction.near_zero()) scatter_direction = rec.normal;
-                scattered = Ray(rec.point, scatter_direction);
-                attenuation = mat.albedo;
-                return true;
-            }
+            // } else {
+            //     vec3 scatter_direction = random_in_hemisphere(rec.normal, seed);
+            //     if (scatter_direction.near_zero()) scatter_direction = rec.normal;
+            //     scattered = Ray(rec.point, scatter_direction);
+            //     attenuation = mat.albedo;
+            //     return true;
+            // }
         }
 
         case DIELECTRIC: {

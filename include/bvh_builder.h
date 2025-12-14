@@ -108,7 +108,7 @@ __host__ std::vector<BVHNode> build_bvh(const std::vector<SphereData>& spheres, 
 
     for (size_t i = 0; i < planes.size(); ++i) {
         AABB box = get_plane_aabb(planes[i]);
-        point3 centroid = planes[i].base + (planes[i].u + planes[i].v) * 0.5f;  // Approx centroid
+        point3 centroid = planes[i].base + (planes[i].u + planes[i].v) * 0.5f;
         primitives.push_back({box, 1, (int)i, centroid});
     }
 

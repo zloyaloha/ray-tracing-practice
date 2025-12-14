@@ -119,7 +119,7 @@ public:
     Camera(int height, int width, std::unique_ptr<ISaver> image_saver, const point3 &camera_pos,
            const point3 &look_at_point = point3(0, 0, 0));
 
-    void render(color *d_fb) const;
+    void render(int i, color *d_fb) const;
     void render_cpu(const SceneData &scene_data, std::vector<color> &framebuffer);
     CameraData build_camera_data() const;
 

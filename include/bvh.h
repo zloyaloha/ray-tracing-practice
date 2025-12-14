@@ -18,7 +18,7 @@ struct BVHTree {
 
 __host__ __device__ inline bool hit_bvh(const Ray& r, Interval ray_t, HitRecord& rec, BVHNode* nodes, int num_nodes,
                                         SphereData* spheres, PlaneData* planes) {
-    int stack[32];
+    int stack[2048];
     int stack_ptr = 0;
     stack[stack_ptr++] = 0;
 
@@ -48,7 +48,7 @@ __host__ __device__ inline bool hit_bvh(const Ray& r, Interval ray_t, HitRecord&
                     rec = temp_rec;
                 }
             } else {
-                if (stack_ptr + 2 <= 32) {
+                if (stack_ptr + 2 <= 2048) {
                     int axis = node.type;
                     bool traverse_left_first = r.direction()[axis] >= 0;
                     

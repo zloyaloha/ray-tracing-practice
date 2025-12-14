@@ -9,6 +9,7 @@ struct __align__(16) SphereData {
     point3 center;
     float radius;
     int material_idx;
+    int pad[3];
     __host__ __device__ SphereData(const point3 &center_sphere, float radius_sphere, int material_idx_sphere)
         : center(center_sphere), radius(radius_sphere), material_idx(material_idx_sphere) {}
 };
