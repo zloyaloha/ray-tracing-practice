@@ -3,3 +3,5 @@ diff
 .clang-format
 render.ppm
 images/
+*.g
+*.json
